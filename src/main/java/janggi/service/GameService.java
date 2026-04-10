@@ -14,26 +14,33 @@ import janggi.dto.BoardDto;
 import janggi.dto.DestinationDto;
 import janggi.dto.GameDto;
 import janggi.dto.WinnerDto;
+import janggi.infrastructure.db.TransactionTemplate;
 import java.util.List;
 
 public class GameService {
     private final GameRepository gameRepository;
+    private final TransactionTemplate transactionTemplate;
 
-    public GameService(GameRepository gameRepository) {
+    public GameService(GameRepository gameRepository, TransactionTemplate transactionTemplate1) {
         this.gameRepository = gameRepository;
+        this.transactionTemplate = transactionTemplate1;
     }
 
     public Long initializeGame(Name choName, Name hanName, Formation choFormation, Formation hanFormation) {
-        Players players = new Players(new Player(choName, Side.CHO), new Player(hanName, Side.HAN));
-        Board board = BoardFactory.create(choFormation, hanFormation);
-        Game game = Game.startNew(board, players);
-        return gameRepository.save(game);
+        transactionTemplate.execute(() -> {
+            Players players = new Players(new Player(choName, Side.CHO), new Player(hanName, Side.HAN));
+            Board board = BoardFactory.create(choFormation, hanFormation);
+            Game game = Game.startNew(board, players);
+            return gameRepository.save(game);
+        });
     }
 
     public void move(Long gameId, Position source, Position target) {
-        Game game = gameRepository.findById(gameId).orElseThrow();
-        game.move(source, target);
-        gameRepository.update(gameId, game);
+        transactionTemplate.execute(() -> {
+            Game game = gameRepository.findById(gameId).orElseThrow();
+            game.move(source, target);
+            gameRepository.update(gameId, game);
+        });
     }
 
     public List<GameDto> findAllGames() {
@@ -52,7 +59,7 @@ public class GameService {
 
     public Side getCurrentSide(Long gameId) {
         Game game = gameRepository.findById(gameId).orElseThrow();
-        return  game.getCurrentSide();
+        return game.getCurrentSide();
     }
 
     public DestinationDto selectSource(Long gameId, Position source) {

@@ -3,7 +3,6 @@ package janggi;
 import janggi.controller.ConsoleController;
 import janggi.domain.repository.GameRepository;
 import janggi.infrastructure.dao.GameDao;
-import janggi.infrastructure.dao.PieceDao;
 import janggi.infrastructure.repository.JdbcGameRepository;
 import janggi.service.GameService;
 import janggi.view.InputView;
